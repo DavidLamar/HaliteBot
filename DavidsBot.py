@@ -2,10 +2,21 @@ import hlt
 from hlt import NORTH, EAST, SOUTH, WEST, STILL, Move, Square
 import random
 
+##################################################################################################################################
+## Setup
+##################################################################################################################################
 myID, game_map = hlt.get_init();
-hlt.send_init("MyPythonBot");
+hlt.send_init("HAL(ite)_9000");
+
+best_border = None;
+
+
+##################################################################################################################################
+## Actual Bot Code
+##################################################################################################################################
 
 def assign_move(square):
+
     target, direction = max(((neighbor, direction) for direction, neighbor in enumerate(game_map.neighbors(square))
                                 if neighbor.owner != myID),
                                 default = (None, None),
@@ -30,7 +41,9 @@ def assign_move(square):
 
 def move_border(square, outwards_direction):
     direction = outwards_direction;
-
+    if( any( (neighbor.owner != myID and neighbor.owner != 0) for neighbor in game_map.neighbors(square)) ):
+        best_border = square;
+        
     if(direction == NORTH or direction == SOUTH):
         dir1 = EAST;
         dir2 = WEST;
@@ -61,6 +74,9 @@ def decide_move(square, direction1, direction2):
     return None;
         
 def find_border(square):
+    if(best_border != None):
+        return get_direction(square, best_border);
+    
     direction = NORTH;
     tile = square;
     max_distance = min(game_map.width, game_map.height) / 2;
@@ -79,6 +95,15 @@ def find_border(square):
             direction = d;
 
     return (tile, direction);
+
+def get_direction(sq1, sq2):
+    self = game_map;
+    dx = min(abs(sq1.x - sq2.x), sq1.x + self.width - sq2.x, sq2.x + self.width - sq1.x);
+    dy = min(abs(sq1.y - sq2.y), sq1.y + self.height - sq2.y, sq2.y + self.height - sq1.y);
+    if(abs(dx) > abs(dy)):
+        return EAST if dx < 0 else WEST;
+    else:
+        return NORTH if dy < 0 else SOUTH;
 
 def heuristic(square):
     if (square.owner == 0 and square.strength > 0):
